@@ -13,10 +13,10 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  static List<Widget> _page = <Widget>[
-    const ScreenA(),
-    const ScreenB(),
-    const ScreenC(),
+  static final List<Widget> _page = <Widget>[
+     ScreenA(),
+     ScreenB(),
+     ScreenC(),
   ];
 
   void _onItemTapped(int index) {
@@ -29,9 +29,13 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        body: Center(
+        body:IndexedStack(
+          index: _selectedIndex,
+          children: _page,
+        )
+        /*Center(
           child: _page.elementAt(_selectedIndex),
-        ),
+        )*/,
         bottomNavigationBar: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
