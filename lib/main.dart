@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:start/add_item_screen.dart';
 
 import 'login_screen.dart';
 import 'main_screen.dart';
@@ -21,7 +22,8 @@ class MyApp extends StatelessWidget {
         ),
         routes: <String, WidgetBuilder>{
           '/home': (BuildContext context) => const MainScreen(),
+          '/home/additem': (BuildContext context) => const AddItemScreen(),
         },
-        home: const LoginScreen());
+        home: LoginScreen());
   }
 }
