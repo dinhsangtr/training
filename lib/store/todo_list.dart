@@ -15,10 +15,13 @@ abstract class _TodoList with Store{
   VisibilityFilter filter = VisibilityFilter.all;
 
   @action
-  void initTodos(){
+  Future<ObservableList<Todo>> initTodos() async{
+    await Future.delayed(const Duration(seconds: 2));
     for(int i = 0; i < 10; i++){
       todos.add(Todo("Task - " + i.toString()));
+      print("Task - " + i.toString());
     }
+    return todos;
   }
 
   @action
@@ -29,5 +32,17 @@ abstract class _TodoList with Store{
   @action
   addTodo(String des){
     todos.add(Todo(des));
+  }
+
+  @action
+  editTodo(int index, String des, bool done){
+    todos[index].description = des;
+    todos[index].done = done;
+  }
+
+  @action
+  editStatusTodo(int index, bool done){
+    todos[index].done = done;
+    print(done.toString());
   }
 }

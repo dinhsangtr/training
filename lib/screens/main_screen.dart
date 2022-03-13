@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:start/screen_a.dart';
-import 'package:start/screen_b.dart';
-import 'package:start/screen_c.dart';
+import 'package:start/screens/screen_a.dart';
+import 'package:start/screens/screen_b.dart';
+import 'package:start/screens/screen_c.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -14,9 +14,9 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
   static final List<Widget> _page = <Widget>[
-     ScreenA(),
-     ScreenB(),
-     ScreenC(),
+     const ScreenA(),
+     const ScreenB(),
+     const ScreenC(),
   ];
 
   void _onItemTapped(int index) {
