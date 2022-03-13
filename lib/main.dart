@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:start/add_item_screen.dart';
+import 'package:start/screens/add_item_screen.dart';
 
-import 'login_screen.dart';
-import 'main_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/main_screen.dart';
 
 void main() {
   runApp(const MyApp());

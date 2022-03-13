@@ -39,18 +39,14 @@ mixin _$TodoList on _TodoList, Store {
     });
   }
 
-  final _$_TodoListActionController = ActionController(name: '_TodoList');
+  final _$initTodosAsyncAction = AsyncAction('_TodoList.initTodos');
 
   @override
-  void initTodos() {
-    final _$actionInfo =
-        _$_TodoListActionController.startAction(name: '_TodoList.initTodos');
-    try {
-      return super.initTodos();
-    } finally {
-      _$_TodoListActionController.endAction(_$actionInfo);
-    }
+  Future<ObservableList<Todo>> initTodos() {
+    return _$initTodosAsyncAction.run(() => super.initTodos());
   }
+
+  final _$_TodoListActionController = ActionController(name: '_TodoList');
 
   @override
   dynamic removeTodosAt(int index) {
@@ -69,6 +65,28 @@ mixin _$TodoList on _TodoList, Store {
         _$_TodoListActionController.startAction(name: '_TodoList.addTodo');
     try {
       return super.addTodo(des);
+    } finally {
+      _$_TodoListActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
+  dynamic editTodo(int index, String des, bool done) {
+    final _$actionInfo =
+        _$_TodoListActionController.startAction(name: '_TodoList.editTodo');
+    try {
+      return super.editTodo(index, des, done);
+    } finally {
+      _$_TodoListActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
+  dynamic editStatusTodo(int index, bool done) {
+    final _$actionInfo = _$_TodoListActionController.startAction(
+        name: '_TodoList.editStatusTodo');
+    try {
+      return super.editStatusTodo(index, done);
     } finally {
       _$_TodoListActionController.endAction(_$actionInfo);
     }

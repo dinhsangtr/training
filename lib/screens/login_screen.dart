@@ -22,6 +22,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     var _size = MediaQuery.of(context).size;
 
+    //test
+    emailController.text = 'sang';
+    passwordController.text = '123';
+
     void _signIn(String email, String password) {
       if (emailController.text.isEmpty || passwordController.text.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(

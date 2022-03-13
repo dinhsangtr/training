@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:start/store/todo_list.dart';
 
-import 'constants.dart';
+import '../constants.dart';
 
 class AddItemScreen extends StatefulWidget {
   const AddItemScreen({Key? key}) : super(key: key);
