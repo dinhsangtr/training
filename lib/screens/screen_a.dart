@@ -93,7 +93,6 @@ class _HomeScreenState extends State<ScreenA> {
   Widget _buildListViewItem(index) {
     return Observer(
       builder: (_) => Slidable(
-
         endActionPane: ActionPane(
           extentRatio: 0.20,
           motion: const BehindMotion(),
@@ -158,7 +157,7 @@ class _HomeScreenState extends State<ScreenA> {
   //Delete
   _showAlertDialog(int index) {
     showDialog(
-      context:context,
+      context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete item!'),
         content: const Text('Do you want to delete this item'),
@@ -171,7 +170,7 @@ class _HomeScreenState extends State<ScreenA> {
             child: const Text('Yes'),
             onPressed: () async {
               await _todoList.removeTodosAt(index);
-              Navigator.of(context, rootNavigator: true).pop();
+              Navigator.of(context).pop();
             },
           ),
         ],
@@ -179,7 +178,7 @@ class _HomeScreenState extends State<ScreenA> {
     );
   }
 
-  //Add or Update
+  ///Add or Update
   Widget _buildDialogButton(
       {required String text,
       required Color? color,
@@ -198,7 +197,7 @@ class _HomeScreenState extends State<ScreenA> {
     ));
   }
 
-  _pressUpdateButton({required int index, required bool status}) async{
+  _pressUpdateButton({required int index, required bool status}) async {
     await _todoList.editStatusTodo(index, status);
   }
 
@@ -207,37 +206,17 @@ class _HomeScreenState extends State<ScreenA> {
     required String action,
     int? index,
   }) {
-    Function()? onPressed = () {};
     bool status = false;
 
-    switch (action) {
-      case "add":
-        onPressed = () async {
-          if (_descriptionController.text.isNotEmpty) {
-            await _todoList.addTodo(_descriptionController.text);
-            _descriptionController.clear();
-            Navigator.of(context, rootNavigator: true).pop();
-          }
-        };
-        break;
-      case "update":
-        status = _todoList.todos[index!].done;
-        _descriptionController.text = _todoList.todos[index].description;
-        print(_descriptionController.text);
-        onPressed = () async {
-          if (_descriptionController.text.isNotEmpty) {
-            await _todoList.editTodo(
-                index, _descriptionController.text, status);
-            _descriptionController.clear();
-            Navigator.of(context, rootNavigator: true).pop();
-          }
-        };
-        break;
+    if (action == _updateAction) {
+      status = _todoList.todos[index!].done;
+      _descriptionController.text = _todoList.todos[index].description;
+      print(_descriptionController.text);
     }
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
+      builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10.0),
@@ -255,6 +234,7 @@ class _HomeScreenState extends State<ScreenA> {
             child: ListView(
               shrinkWrap: true,
               children: <Widget>[
+                //_buildTopSideDialog(action: action, status: status),
                 Row(
                   mainAxisAlignment: action == _addAction
                       ? MainAxisAlignment.center
@@ -285,48 +265,107 @@ class _HomeScreenState extends State<ScreenA> {
                                 status = val;
                               });
                             },
-                          ),
+                          )
                   ],
                 ),
                 const SizedBox(height: 10.0),
-                TextField(
-                  controller: _descriptionController,
-                  minLines: 1,
-                  decoration: InputDecoration(
-                    hintText: 'Enter todo',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10.0)),
-                    focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10.0)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 15),
-                  ),
-                  cursorColor: Colors.grey,
-                  keyboardType: TextInputType.text,
-                  textInputAction: TextInputAction.next,
-                ),
+                _buildCenterSide(),
                 const SizedBox(height: 5.0),
-                Row(
-                  children: <Widget>[
-                    _buildDialogButton(
-                      text: 'Back',
-                      color: Colors.black.withOpacity(0.2),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                    const SizedBox(width: 8.0),
-                    _buildDialogButton(
-                      text: action == _addAction ? 'Add' : 'Update',
-                      color: Colors.redAccent.withOpacity(0.7),
-                      onPressed: onPressed,
-                    ),
-                  ],
-                ),
+                _buildBottomSide(action: action, status: status, index: index!)
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  //TOP - TITLE
+  Widget _buildTopSideDialog({required String action, required bool status}) {
+    return Row(
+      mainAxisAlignment: action == _addAction
+          ? MainAxisAlignment.center
+          : MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(action == _addAction ? 'Add New Todo' : 'Update Todo',
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center),
+        action == _addAction
+            ? const SizedBox(height: 0.0, width: 0.0)
+            : FlutterSwitch(
+                width: 75.0,
+                height: 30.0,
+                valueFontSize: 10.0,
+                toggleSize: 25.0,
+                value: status,
+                borderRadius: 30.0,
+                padding: 5.0,
+                showOnOff: true,
+                activeColor: Colors.green,
+                inactiveColor: primaryColor,
+                activeText: 'Done',
+                inactiveText: 'Not Yet',
+                onToggle: (val) {
+                  setState(() {
+                    status = val;
+                  });
+                },
+              )
+      ],
+    );
+  }
+
+  //CENTER - INPUT
+  Widget _buildCenterSide() {
+    return TextField(
+      controller: _descriptionController,
+      minLines: 1,
+      decoration: InputDecoration(
+        hintText: 'Enter todo',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
+        focusedBorder:
+            OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 15),
+      ),
+      cursorColor: Colors.grey,
+      keyboardType: TextInputType.text,
+      textInputAction: TextInputAction.next,
+    );
+  }
+
+  //BOTTOM - BUTTON
+  Widget _buildBottomSide(
+      {required String action, required bool status, required int index}) {
+    return Row(
+      children: <Widget>[
+        _buildDialogButton(
+          text: 'Back',
+          color: Colors.black.withOpacity(0.2),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        const SizedBox(width: 8.0),
+        _buildDialogButton(
+          text: action == _addAction ? 'Add' : 'Update',
+          color: Colors.redAccent.withOpacity(0.7),
+          onPressed: /*onPressed*/ () async {
+            if (_descriptionController.text.isNotEmpty) {
+              if (action == _addAction) {
+                await _todoList.addTodo(_descriptionController.text);
+                _descriptionController.clear();
+                Navigator.of(context, rootNavigator: true).pop();
+              } else if (action == _updateAction) {
+                await _todoList.editTodo(
+                    index, _descriptionController.text, status);
+              }
+              _descriptionController.clear();
+              Navigator.of(context).pop();
+            }
+          },
+        ),
+      ],
     );
   }
 }
