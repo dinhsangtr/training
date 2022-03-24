@@ -9,18 +9,18 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 
 import '../constants.dart';
 
-class ScreenA extends StatefulWidget {
-  const ScreenA({Key? key}) : super(key: key);
+class TodoScreen extends StatefulWidget {
+  const TodoScreen({Key? key}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _HomeScreenState();
+  State<StatefulWidget> createState() => _TodoScreenState();
 }
 
-class _HomeScreenState extends State<ScreenA> {
+class _TodoScreenState extends State<TodoScreen> {
   final TodoList _todoList = TodoList();
   late Future<ObservableList<Todo>> _todos;
 
-  //final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final TextEditingController _descriptionController = TextEditingController();
   final String _addAction = 'add';
@@ -42,8 +42,8 @@ class _HomeScreenState extends State<ScreenA> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        appBar: createAppbar(context,
-            title: 'Home', leading: const SizedBox(height: 0.0, width: 0.0)),
+        key: _scaffoldKey,
+        appBar: createAppbar(context, title: 'Todo List'),
         body: FutureBuilder<ObservableList<Todo>>(
             future: _todos,
             builder: (BuildContext context,
@@ -157,7 +157,7 @@ class _HomeScreenState extends State<ScreenA> {
   //Delete
   _showAlertDialog(int index) {
     showDialog(
-      context: context,
+      context: _scaffoldKey.currentContext!,
       builder: (context) => AlertDialog(
         title: const Text('Delete item!'),
         content: const Text('Do you want to delete this item'),
@@ -212,10 +212,12 @@ class _HomeScreenState extends State<ScreenA> {
       status = _todoList.todos[index!].done;
       _descriptionController.text = _todoList.todos[index].description;
       print(_descriptionController.text);
+    } else if (action == _addAction) {
+      _descriptionController.text = '';
     }
 
     showDialog(
-      context: context,
+      context: _scaffoldKey.currentContext!,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => Dialog(
           shape: RoundedRectangleBorder(
@@ -271,7 +273,7 @@ class _HomeScreenState extends State<ScreenA> {
                 const SizedBox(height: 10.0),
                 _buildCenterSide(),
                 const SizedBox(height: 5.0),
-                _buildBottomSide(action: action, status: status, index: index!)
+                _buildBottomSide(action: action, status: status, index: index)
               ],
             ),
           ),
@@ -336,7 +338,7 @@ class _HomeScreenState extends State<ScreenA> {
 
   //BOTTOM - BUTTON
   Widget _buildBottomSide(
-      {required String action, required bool status, required int index}) {
+      {required String action, required bool status, int? index}) {
     return Row(
       children: <Widget>[
         _buildDialogButton(
@@ -355,10 +357,10 @@ class _HomeScreenState extends State<ScreenA> {
               if (action == _addAction) {
                 await _todoList.addTodo(_descriptionController.text);
                 _descriptionController.clear();
-                Navigator.of(context, rootNavigator: true).pop();
+                //Navigator.of(context).pop();
               } else if (action == _updateAction) {
                 await _todoList.editTodo(
-                    index, _descriptionController.text, status);
+                    index!, _descriptionController.text, status);
               }
               _descriptionController.clear();
               Navigator.of(context).pop();
