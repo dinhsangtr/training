@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:start/data/sharedprefs/constants/my_shared_prefs.dart';
 import 'package:start/utils/toast.dart';
-import '../graphql_.dart';
-import '../utils/my_shared_prefs.dart';
-import '../utils/graphql_config.dart';
+import '../../data/network/constants/constants.dart';
+import '../../data/sharedprefs/shared_preference_helper.dart';
+import '../../data/network/graphql_client.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -17,11 +18,11 @@ class _LoginScreenState extends State<LoginScreen> {
   TextEditingController passwordController = TextEditingController();
 
   //shared prefs
-  MySharedPrefs prefs = MySharedPrefs();
+  SharedPreferencesHelper prefs = SharedPreferencesHelper();
 
   @override
   void initState() {
-    emailController.text = 'bbb@bbb.bbb';
+    emailController.text = 'sang@simple.com';
     passwordController.text = '12345678';
     super.initState();
   }
@@ -38,9 +39,9 @@ class _LoginScreenState extends State<LoginScreen> {
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
       Toast.showSnackBar(context, message: 'TextField Cannot Be Empty');
     } else {
-      await GraphQLConfig.graphInit().value.mutate(
+      await GraphQLConfig.client().value.mutate(
             MutationOptions(
-              document: gql(GraphQL_.signIn),
+              document: gql(GraphQLConstants.signIn),
               variables: {
                 "input": {
                   "vfaEmail": vfaEmail,

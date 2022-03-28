@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:start/screens/sidebar.dart';
+import 'package:start/data/network/constants/constants.dart';
+import 'package:start/data/network/graphql_client.dart';
+import 'package:start/screens/home/sidebar.dart';
+import 'package:start/utils/toast.dart';
 import 'package:start/widgets/app.dart';
+import 'package:start/widgets/custom_dialog.dart';
 
-import '../constants.dart';
+import '../../constants/constants.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -18,6 +23,53 @@ class _MainScreenState extends State<MainScreen> {
   DateFormat dateFormat = DateFormat("EEEE, dd MMMM yyyy");
   DateTime now = DateTime.now();
   late String today = dateFormat.format(now);
+
+  Future<void> _createActivity(String activityTypes) async {
+    await GraphQLConfig.client().value.mutate(
+          MutationOptions(
+            document: gql(GraphQLConstants.createActivity),
+            variables: {
+              "input": {
+                "activityTypes": activityTypes,
+              }
+            },
+            onError: (OperationException? error) {
+              List<GraphQLError> graphqlErrors = error!.graphqlErrors;
+              print('Create Activity Error: ' +
+                  graphqlErrors.first.message.toString());
+              Toast.showSnackBar(context,
+                  message: graphqlErrors.first.message.toString());
+            },
+            onCompleted: (dynamic data) {
+              print('Data: ' + (data.toString() != 'null' ? 'Oke' : 'Empty'));
+
+              if (data != null) {
+                print(data.toString());
+                String message = '';
+                if (data['createActivity']['requestResolved'] == true) {
+                  message = activityTypes.replaceAll('_', ' ') + ' SUCCESS';
+                  showDialog<void>(
+                    context: context,
+                    barrierDismissible: true,
+                    builder: (BuildContext context) {
+                      return CustomDialog(message: message, hasButton: false);
+                    },
+                  );
+                } else {
+                  message = data['createActivity']['message'];
+                  showDialog<void>(
+                    context: context,
+                    barrierDismissible: true,
+                    builder: (BuildContext context) {
+                      return CustomDialog(message: message, hasButton: false);
+                    },
+                  );
+                }
+              }
+            },
+          ),
+        );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,13 +124,14 @@ class _MainScreenState extends State<MainScreen> {
       shrinkWrap: true,
       primary: false,
       padding: const EdgeInsets.all(15),
-      crossAxisSpacing: 15,
-      mainAxisSpacing: 15,
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
       crossAxisCount: 2,
       children: <Widget>[
         _buildItem(
           onTap: () {
             print('Check in');
+            _createActivity(GraphQLConstants.checkIn);
           },
           color: Colors.grey.withOpacity(0.5),
           borderRadius: borderRadius(20.0, 20.0, 0.0, 20.0),
@@ -88,6 +141,7 @@ class _MainScreenState extends State<MainScreen> {
         _buildItem(
           onTap: () {
             print('Check out');
+            _createActivity(GraphQLConstants.checkOut);
           },
           color: Colors.green.withOpacity(0.9),
           borderRadius: borderRadius(20.0, 20.0, 20.0, 0.0),
@@ -98,6 +152,7 @@ class _MainScreenState extends State<MainScreen> {
         _buildItem(
           onTap: () {
             print('Go out');
+            _createActivity(GraphQLConstants.goOut);
           },
           color: Colors.deepOrange.withOpacity(0.7),
           borderRadius: borderRadius(20.0, 0.0, 20.0, 20.0),
@@ -108,6 +163,7 @@ class _MainScreenState extends State<MainScreen> {
         _buildItem(
           onTap: () {
             print('Come back');
+            _createActivity(GraphQLConstants.comeBack);
           },
           color: Colors.grey.withOpacity(0.5),
           borderRadius: borderRadius(0.0, 20.0, 20.0, 20.0),

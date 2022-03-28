@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../constants.dart';
+import '../constants/constants.dart';
 
 //app bar
 PreferredSizeWidget? createAppbar(BuildContext context,
@@ -18,5 +18,16 @@ PreferredSizeWidget? createAppbar(BuildContext context,
       title ?? '',
       style: TextStyle(color: color == null ? Colors.white : textColor),
     ),
+  );
+}
+
+
+BorderRadius borderRadius(
+    double topLeft, double topRight, double bottomRight, double bottomLeft) {
+  return BorderRadius.only(
+    topLeft: Radius.circular(topLeft),
+    topRight: Radius.circular(topRight),
+    bottomRight: Radius.circular(bottomRight),
+    bottomLeft: Radius.circular(bottomLeft),
   );
 }
