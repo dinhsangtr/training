@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 import 'package:mobx/mobx.dart';
-import 'package:start/store/todo.dart';
-import 'package:start/store/todo_list.dart';
+import 'package:start/store/todo/todo.dart';
+import 'package:start/store/todo/todo_list.dart';
 import 'package:start/widgets/app.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
-import '../constants.dart';
+import '../../../constants/constants.dart';
 
 class TodoScreen extends StatefulWidget {
   const TodoScreen({Key? key}) : super(key: key);

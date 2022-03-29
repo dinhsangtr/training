@@ -1,5 +1,5 @@
 import 'package:mobx/mobx.dart';
-import 'package:start/store/todo.dart';
+import 'package:start/store/todo/todo.dart';
 
 part 'todo_list.g.dart';
 

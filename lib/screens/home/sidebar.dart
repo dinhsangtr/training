@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:start/utils/my_shared_prefs.dart';
+import 'package:start/data/sharedprefs/constants/my_shared_prefs.dart';
+import 'package:start/data/sharedprefs/shared_preference_helper.dart';
 
-import '../constants.dart';
+import '../../constants/constants.dart';
 
 class SideBar extends StatefulWidget {
   const SideBar({Key? key}) : super(key: key);
@@ -12,7 +13,7 @@ class SideBar extends StatefulWidget {
 
 class _SidebarState extends State<SideBar> {
   //shared prefs
-  MySharedPrefs prefs = MySharedPrefs();
+  SharedPreferencesHelper prefs = SharedPreferencesHelper();
 
   //value
   String vfaEmail = '';
@@ -37,13 +38,33 @@ class _SidebarState extends State<SideBar> {
 
     //
     return Drawer(
-      child: Column(
-        children: <Widget>[
-          _buildDrawerHeader(),
-          _buildBody(),
-        ],
-      ),
-    );
+        child: Stack(
+      children: [
+        Column(
+          children: <Widget>[
+            _buildDrawerHeader(),
+            _buildBody(),
+          ],
+        ),
+        Positioned(
+          bottom: 30,
+          right: 0,
+          left: 0,
+          child: Container(
+            alignment: Alignment.center,
+            child: InkWell(
+              onTap: () => Navigator.of(context).pop(),
+              child: CircleAvatar(
+                backgroundColor: primaryColor,
+                radius: 25,
+                child: const Icon(Icons.arrow_back_ios_outlined,
+                    color: Colors.white, size: 20),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ));
   }
 
   //build header
@@ -59,7 +80,7 @@ class _SidebarState extends State<SideBar> {
                 ClipOval(
                   child: vfaAvatar == 'null'
                       ? Image.asset(
-                          'assets/images/default_avt.png',
+                          'assets/images/default_avatar.png',
                           width: 100,
                           height: 100,
                           fit: BoxFit.cover,
@@ -76,14 +97,6 @@ class _SidebarState extends State<SideBar> {
               ],
             ),
           ),
-          /*Positioned(
-                  top: 0,
-                  right: 0,
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back_ios),
-                    onPressed: () => {Navigator.of(context).pop()},
-                  ),
-                )*/
         ],
       ),
       decoration: BoxDecoration(color: primaryColor),
@@ -96,10 +109,13 @@ class _SidebarState extends State<SideBar> {
       children: <Widget>[
         ListTile(
           leading: const Icon(Icons.perm_identity_sharp),
-          title: const Text('My Info'),
-          onTap: () => {
-            Navigator.of(context).pushNamed('/home/myInfo')
-          },
+          title: const Text('My Profile'),
+          onTap: () => {Navigator.of(context).pushNamed('/home/myInfo')},
+        ),
+        ListTile(
+          leading: const Icon(Icons.calendar_today_outlined),
+          title: const Text('My Timeline'),
+          onTap: () => {Navigator.of(context).pushNamed('/home/myTimeline')},
         ),
         ListTile(
           leading: const Icon(Icons.view_list),
@@ -108,11 +124,11 @@ class _SidebarState extends State<SideBar> {
             Navigator.of(context).pushNamed('/home/todolist');
           },
         ),
-        ListTile(
-          leading: const Icon(Icons.border_color),
-          title: const Text('Edit Profile'),
-          onTap: () => {Navigator.of(context).pop()},
-        ),
+        // ListTile(
+        //   leading: const Icon(Icons.border_color),
+        //   title: const Text('Edit Profile'),
+        //   onTap: () => {Navigator.of(context).pop()},
+        // ),
         ListTile(
           leading: const Icon(Icons.exit_to_app),
           title: const Text('Logout'),
