@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:start/constants/constants.dart';
 import 'package:start/data/network/constants/constants.dart';
 import 'package:start/data/network/graphql_client.dart';
 import 'package:start/model/timeline/collection.dart';
 import 'package:start/model/timeline/timeline.dart';
+import 'package:start/screens/home/user/widgets/CustomTextField.dart';
 import 'package:start/widgets/app.dart';
 
 class MyTimeLineScreen extends StatefulWidget {
@@ -19,16 +21,53 @@ class _MyTimeLineScreenState extends State<MyTimeLineScreen> {
   late List<MyTimeline> timelineList;
   Map<String, bool> map = {};
 
-  ScrollController _scrollController = ScrollController();
+  //ScrollController _scrollController = ScrollController();
+  final TextEditingController _startDateController = TextEditingController();
+  final TextEditingController _endDateController = TextEditingController();
 
   //
-  Future<List<MyTimeline>> getTimeline() async {
+  String _startDate = '';
+  String _endDate = '';
+
+  //datetime - picker
+  DateTime selectedDate = DateTime.now();
+
+  _selectDate(BuildContext context, TextEditingController controller) async {
+    final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: selectedDate,
+        firstDate: DateTime(1900, 1),
+        lastDate: DateTime(2100));
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+        var date =
+            "${picked.toLocal().year}-${picked.toLocal().month}-${picked.toLocal().day}";
+        controller.text = date;
+
+
+        //Check distance between 2 date
+        DateTime sDate = DateFormat("yyyy-MM-dd").parse(_startDateController.text);
+        DateTime eDate = DateFormat("yyyy-MM-dd").parse(_endDateController.text);
+        final difference = sDate.difference(eDate).inDays;
+       print(difference);
+       print(_startDateController.text);
+       print(_endDateController.text);
+        timelineListFT = getTimeline(
+            startDate: _startDateController.text, endDate: _endDateController.text);
+      });
+    }
+  }
+
+  //FormatDate: yyyy-MM-dd
+  Future<List<MyTimeline>> getTimeline(
+      {required String startDate, required String endDate}) async {
     await Future.delayed(const Duration(seconds: 1));
     QueryResult queryResult = await GraphQLConfig.client().value.query(
           QueryOptions(
             document: gql(GraphQLConstants.myTimeLine),
             variables: {
-              "input": {"startDate": "2022-03-01", "endDate": "2022-03-31"}
+              "input": {"startDate": startDate, "endDate": endDate}
             },
           ),
         );
@@ -52,7 +91,12 @@ class _MyTimeLineScreenState extends State<MyTimeLineScreen> {
 
   @override
   void initState() {
-    timelineListFT = getTimeline();
+    DateTime now = DateTime.now();
+    DateTime newDate = DateTime(now.year, now.month - 1, now.day);
+    _startDateController.text = DateFormat("yyyy-MM-dd").format(newDate);
+    _endDateController.text = DateFormat("yyyy-MM-dd").format(now);
+    timelineListFT = getTimeline(
+        startDate: _startDateController.text, endDate: _endDateController.text);
     super.initState();
   }
 
@@ -82,7 +126,6 @@ class _MyTimeLineScreenState extends State<MyTimeLineScreen> {
                 //   map.addAll({'isExpanded${i.toString()}': false});
                 // }
                 // print(map);
-
                 return Container(
                   color: primaryColor,
                   child: Container(
@@ -97,7 +140,8 @@ class _MyTimeLineScreenState extends State<MyTimeLineScreen> {
                           Container(
                             width: MediaQuery.of(context).size.width,
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 20.0, vertical: 10.0),
+                                horizontal: 0.0, vertical: 10.0),
+                            child: _buildChooseDate(),
                           ),
                           ListView.separated(
                             physics: const NeverScrollableScrollPhysics(),
@@ -119,6 +163,7 @@ class _MyTimeLineScreenState extends State<MyTimeLineScreen> {
                 );
               }
             } else if (snapshot.hasError) {
+              print(snapshot.error);
               return const Center(child: Text('Error'));
             }
           }
@@ -128,6 +173,48 @@ class _MyTimeLineScreenState extends State<MyTimeLineScreen> {
     );
   }
 
+  ///Pick date
+  _buildChooseDate() {
+    return Row(
+      children: <Widget>[
+        Flexible(
+          child: GestureDetector(
+            onTap: () => _selectDate(context, _startDateController),
+            child: AbsorbPointer(
+              child: CustomTextField(
+                controller: _startDateController,
+                title: 'From',
+                isImportant: true,
+                hintText: 'Choose',
+                textInputType: TextInputType.datetime,
+                suffixIcon: Icon(Icons.calendar_today_outlined,
+                    color: Colors.black.withOpacity(0.5)),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10.0),
+        Flexible(
+          child: GestureDetector(
+            onTap: () => _selectDate(context, _endDateController),
+            child: AbsorbPointer(
+              child: CustomTextField(
+                controller: _endDateController,
+                title: 'To',
+                isImportant: true,
+                hintText: 'Choose',
+                textInputType: TextInputType.datetime,
+                suffixIcon: Icon(Icons.calendar_today_outlined,
+                    color: Colors.black.withOpacity(0.5)),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  ///---------------------------------------------------------------------------
   bool isExpanded = false;
 
   _buildItemTimeLine(
