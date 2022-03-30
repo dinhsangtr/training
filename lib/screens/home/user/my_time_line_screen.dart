@@ -6,6 +6,7 @@ import 'package:start/model/timeline/collection.dart';
 import 'package:start/model/timeline/timeline.dart';
 import 'package:start/screens/home/user/widgets/custom_text_field.dart';
 import 'package:start/store/user/my_timeline.dart';
+import 'package:start/utils/datetime_helper.dart';
 import 'package:start/utils/toast.dart';
 import 'package:start/widgets/app.dart';
 
@@ -165,6 +166,77 @@ class _MyTimeLineScreenState extends State<MyTimeLineScreen> {
     );
   }
 
+  ///---------------------------------------------------------------------------
+
+  _buildItemTimeLine(
+      {required int index, required List<MyTimeline> timelineList}) {
+    String date = timelineList[index].groupDate ?? '';
+    String formatDate = DateTimeHelper.convertDate(date);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12.0),
+      width: MediaQuery.of(context).size.width - 10,
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.all(Radius.circular(10.0)),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+              color: Theme.of(context).hintColor.withOpacity(0.2),
+              spreadRadius: 2,
+              blurRadius: 5)
+        ],
+      ),
+      child: ExpansionTile(
+        leading: const Icon(Icons.calendar_today_sharp, color: Colors.grey),
+        title: Text(formatDate != '' ? formatDate : date,
+            style: const TextStyle(fontSize: 18)),
+        children: <Widget>[
+          ListView.separated(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              separatorBuilder: (context, i) {
+                return const Divider();
+              },
+              itemBuilder: (context, i) {
+                return _buildItemCollection(
+                    col: timelineList[index].collections, index: i);
+              },
+              itemCount: timelineList[index].collections!.length),
+        ],
+      ),
+    );
+  }
+
+  _buildItemCollection({required List? col, required int index}) {
+    //print(col![index]);
+    Collection collection = Collection.fromJson(col![index]);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 40.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(0),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10.0),
+          color: Colors.white,
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(collection.activityTypes ?? 'TYPE'),
+                    Text(collection.activityDescription ?? 'Description',
+                        style: const TextStyle(color: Colors.grey))
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   ///Pick date
   _buildChooseDate() {
     return Row(
@@ -204,108 +276,4 @@ class _MyTimeLineScreenState extends State<MyTimeLineScreen> {
       ],
     );
   }
-
-  ///---------------------------------------------------------------------------
-  bool isExpanded = false;
-
-  _buildItemTimeLine(
-      {required int index, required List<MyTimeline> timelineList}) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          isExpanded = !isExpanded;
-          // map.update(('isExpanded${index.toString()}'),
-          //     (value) => !(map['isExpanded${index.toString()}'] ?? false));
-        });
-        //print(map['isExpanded${index.toString()}']);
-      },
-      child: ListView(
-        physics: const NeverScrollableScrollPhysics(),
-        shrinkWrap: true,
-        children: [
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                height: 70,
-                color: Colors.white,
-                child: Row(
-                  children: <Widget>[
-                    Container(
-                      color: primaryColor,
-                      width: 70,
-                      height: 70,
-                      child: const Icon(Icons.calendar_today_sharp,
-                          color: Colors.white),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(timelineList[index].groupDate!,
-                          style: const TextStyle(fontSize: 18)),
-                    ),
-                    Icon(
-                      isExpanded
-                          ? Icons.keyboard_arrow_up
-                          : Icons.keyboard_arrow_down,
-                      color: primaryColor,
-                      size: 30,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          isExpanded
-              ? ListView.separated(
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  separatorBuilder: (context, i) {
-                    return const Divider();
-                  },
-                  itemBuilder: (context, i) {
-                    return _buildItemCollection(
-                        col: timelineList[index].collections, index: i);
-                  },
-                  itemCount: timelineList[index].collections!.length)
-              : const SizedBox(height: 0, width: 0)
-        ],
-      ),
-    );
-  }
-
-  _buildItemCollection({required List? col, required int index}) {
-    //print(col![index]);
-    Collection collection = Collection.fromJson(col![index]);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 40.0),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(0),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10.0),
-          color: Colors.white,
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(collection.activityTypes ?? 'TYPE'),
-                    Text(collection.activityDescription ?? 'Description',
-                        style: const TextStyle(color: Colors.grey))
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-//
-
 }
