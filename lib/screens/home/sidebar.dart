@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:start/data/sharedprefs/constants/my_shared_prefs.dart';
 import 'package:start/data/sharedprefs/shared_preference_helper.dart';
+import 'package:start/screens/login/login_screen.dart';
 
 import '../../constants/constants.dart';
 
@@ -19,24 +20,25 @@ class _SidebarState extends State<SideBar> {
   String vfaEmail = '';
   String vfaAvatar = 'null';
 
+  _getData()  {
+    prefs.get(MySharedPrefs.vfaEmail).then((value) => setState(() {
+      vfaEmail = value.toString();
+      print(vfaEmail);
+    }));
+    prefs.get(MySharedPrefs.vfaAvatar).then((value) => setState(() {
+      vfaAvatar = value.toString();
+      print(vfaAvatar);
+    }));
+  }
+
   @override
   void initState() {
-    prefs.get(MySharedPrefs.vfaEmail).then((value) => setState(() {
-          vfaEmail = value.toString();
-          print(vfaEmail);
-        }));
-    prefs.get(MySharedPrefs.vfaAvatar).then((value) => setState(() {
-          vfaAvatar = value.toString();
-          print(vfaAvatar);
-        }));
+    _getData();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    Size _size = MediaQuery.of(context).size;
-
-    //
     return Drawer(
         child: Stack(
       children: [
@@ -46,28 +48,12 @@ class _SidebarState extends State<SideBar> {
             _buildBody(),
           ],
         ),
-        Positioned(
-          bottom: 30,
-          right: 0,
-          left: 0,
-          child: Container(
-            alignment: Alignment.center,
-            child: InkWell(
-              onTap: () => Navigator.of(context).pop(),
-              child: CircleAvatar(
-                backgroundColor: primaryColor,
-                radius: 25,
-                child: const Icon(Icons.arrow_back_ios_outlined,
-                    color: Colors.white, size: 20),
-              ),
-            ),
-          ),
-        ),
+        _buildButtonClose(),
       ],
     ));
   }
 
-  //build header
+  ///---------------------------------DrawerHeader------------------------------
   Widget _buildDrawerHeader() {
     return DrawerHeader(
       padding: EdgeInsets.zero,
@@ -103,7 +89,7 @@ class _SidebarState extends State<SideBar> {
     );
   }
 
-  //build ListTile
+  ///-----------------------------------Body------------------------------------
   Widget _buildBody() {
     return Column(
       children: <Widget>[
@@ -155,10 +141,31 @@ class _SidebarState extends State<SideBar> {
             onPressed: () async {
               await prefs.destroy();
               Navigator.of(context).pushNamedAndRemoveUntil(
-                  '/login', (Route<dynamic> route) => false);
+                  LoginScreen.route, (Route<dynamic> route) => false);
             },
           ),
         ],
+      ),
+    );
+  }
+
+  ///---------------------------------------------------------------------------
+  _buildButtonClose() {
+    return Positioned(
+      bottom: 30,
+      right: 0,
+      left: 0,
+      child: Container(
+        alignment: Alignment.center,
+        child: InkWell(
+          onTap: () => Navigator.of(context).pop(),
+          child: CircleAvatar(
+            backgroundColor: primaryColor,
+            radius: 25,
+            child: const Icon(Icons.arrow_back_ios_outlined,
+                color: Colors.white, size: 20),
+          ),
+        ),
       ),
     );
   }

@@ -1,33 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:intl/intl.dart';
 import 'package:start/constants/constants.dart';
-import 'package:start/data/network/constants/constants.dart';
-import 'package:start/data/network/graphql_client.dart';
 import 'package:start/model/timeline/collection.dart';
 import 'package:start/model/timeline/timeline.dart';
-import 'package:start/screens/home/user/widgets/CustomTextField.dart';
+import 'package:start/screens/home/user/widgets/custom_text_field.dart';
+import 'package:start/store/user/my_timeline.dart';
+import 'package:start/utils/toast.dart';
 import 'package:start/widgets/app.dart';
 
 class MyTimeLineScreen extends StatefulWidget {
   const MyTimeLineScreen({Key? key}) : super(key: key);
+  static const String route = '/home/myTimeline';
 
   @override
   State<StatefulWidget> createState() => _MyTimeLineScreenState();
 }
 
 class _MyTimeLineScreenState extends State<MyTimeLineScreen> {
-  late Future<List<MyTimeline>> timelineListFT;
-  late List<MyTimeline> timelineList;
-  Map<String, bool> map = {};
+  //Store
+  final MyTimelineStore _myTimelineStore = MyTimelineStore();
 
-  //ScrollController _scrollController = ScrollController();
+  //Controller
   final TextEditingController _startDateController = TextEditingController();
   final TextEditingController _endDateController = TextEditingController();
 
   //
-  String _startDate = '';
-  String _endDate = '';
+  late Future<List<MyTimeline>> timelineListFT;
 
   //datetime - picker
   DateTime selectedDate = DateTime.now();
@@ -36,139 +35,132 @@ class _MyTimeLineScreenState extends State<MyTimeLineScreen> {
     final DateTime? picked = await showDatePicker(
         context: context,
         initialDate: selectedDate,
-        firstDate: DateTime(1900, 1),
+        firstDate: DateTime(2015),
         lastDate: DateTime(2100));
     if (picked != null && picked != selectedDate) {
-      setState(() {
-        selectedDate = picked;
-        var date =
-            "${picked.toLocal().year}-${picked.toLocal().month}-${picked.toLocal().day}";
-        controller.text = date;
+      setState(
+        () {
+          selectedDate = picked;
+          String year = picked.toLocal().year.toString();
+          String month = (picked.toLocal().month.toString().length == 1)
+              ? '0${picked.toLocal().month}'
+              : picked.toLocal().month.toString();
+          String day = (picked.toLocal().day.toString().length == 1)
+              ? '0${picked.toLocal().day}'
+              : picked.toLocal().day.toString();
 
+          var date = "$year-$month-$day";
+          print(date);
+          controller.text = date;
 
-        //Check distance between 2 date
-        DateTime sDate = DateFormat("yyyy-MM-dd").parse(_startDateController.text);
-        DateTime eDate = DateFormat("yyyy-MM-dd").parse(_endDateController.text);
-        final difference = sDate.difference(eDate).inDays;
-       print(difference);
-       print(_startDateController.text);
-       print(_endDateController.text);
-        timelineListFT = getTimeline(
-            startDate: _startDateController.text, endDate: _endDateController.text);
-      });
-    }
-  }
-
-  //FormatDate: yyyy-MM-dd
-  Future<List<MyTimeline>> getTimeline(
-      {required String startDate, required String endDate}) async {
-    await Future.delayed(const Duration(seconds: 1));
-    QueryResult queryResult = await GraphQLConfig.client().value.query(
-          QueryOptions(
-            document: gql(GraphQLConstants.myTimeLine),
-            variables: {
-              "input": {"startDate": startDate, "endDate": endDate}
-            },
-          ),
-        );
-    if (queryResult.data!['myTimeLine']['error']['requestResolved'] == false) {
-      print(queryResult.data!['myTimeLine']['error']['message']);
-      return [];
-    } else {
-      List<dynamic> responseList = queryResult.data!['myTimeLine']['response'];
-      print(responseList.length);
-      if (responseList.isEmpty) {
-        return [];
-      } else {
-        List<MyTimeline> timelineList = [];
-        for (int i = 0; i < responseList.length; i++) {
-          timelineList.add(MyTimeline.fromJson(responseList[i]));
-        }
-        return timelineList;
-      }
+          //Check distance between 2 date
+          DateTime sDate =
+              DateFormat("yyyy-MM-dd").parse(_startDateController.text);
+          DateTime eDate =
+              DateFormat("yyyy-MM-dd").parse(_endDateController.text);
+          final difference = sDate.difference(eDate).inDays;
+          print('Difference: ' + difference.abs().toString());
+          if (difference.abs() > 30) {
+            Toast.showSnackBar(context,
+                message: 'Please input time range between 30 days!');
+          } else {
+            print(_startDateController.text);
+            print(_endDateController.text);
+            setState(
+              () {
+                timelineListFT = _myTimelineStore.getTimelineList(
+                    startDate: _startDateController.text,
+                    endDate: _endDateController.text);
+              },
+            );
+          }
+        },
+      );
     }
   }
 
   @override
   void initState() {
+    //1 month
     DateTime now = DateTime.now();
     DateTime newDate = DateTime(now.year, now.month - 1, now.day);
     _startDateController.text = DateFormat("yyyy-MM-dd").format(newDate);
     _endDateController.text = DateFormat("yyyy-MM-dd").format(now);
-    timelineListFT = getTimeline(
+
+    //init TimelineList
+    timelineListFT = _myTimelineStore.getTimelineList(
         startDate: _startDateController.text, endDate: _endDateController.text);
+    //
     super.initState();
   }
 
   @override
+  void dispose() {
+    _startDateController.dispose();
+    _endDateController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    //getTimeline();
     return Scaffold(
       appBar: createAppbar(
         context,
         title: 'My Timeline',
       ),
-      body: FutureBuilder<List<MyTimeline>>(
-        future: timelineListFT,
-        builder: (context, AsyncSnapshot<List<MyTimeline>> snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            print('waiting');
-            return Container(
-                color: Colors.grey.withOpacity(0.2),
-                child: const Center(child: CircularProgressIndicator()));
-          } else if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasData) {
-              timelineList = snapshot.data ?? [];
-              if (timelineList.isEmpty) {
-                return const Center(child: Text('Nothing'));
-              } else {
-                // for (int i = 0; i < timelineList.length; i++) {
-                //   map.addAll({'isExpanded${i.toString()}': false});
-                // }
-                // print(map);
-                return Container(
-                  color: primaryColor,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: borderRadius(20.0, 20.0, 0.0, 0.0),
-                    ),
-                    child: SingleChildScrollView(
-                      primary: true,
-                      child: Column(
-                        children: <Widget>[
-                          Container(
-                            width: MediaQuery.of(context).size.width,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 0.0, vertical: 10.0),
-                            child: _buildChooseDate(),
-                          ),
-                          ListView.separated(
-                            physics: const NeverScrollableScrollPhysics(),
-                            shrinkWrap: true,
-                            itemCount: timelineList.length,
-                            separatorBuilder: (context, index) =>
-                                const Divider(),
-                            itemBuilder: (context, index) {
-                              return _buildItemTimeLine(
-                                index: index,
-                                timelineList: timelineList,
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }
-            } else if (snapshot.hasError) {
-              print(snapshot.error);
-              return const Center(child: Text('Error'));
-            }
-          }
-          return Container();
-        },
+      body: createBody(
+        child: Observer(
+          builder: (_) => Column(
+            children: [
+              Container(
+                width: MediaQuery.of(context).size.width,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 0.0, vertical: 10.0),
+                child: _buildChooseDate(),
+              ),
+              Expanded(
+                child: FutureBuilder<List<MyTimeline>>(
+                  future: timelineListFT,
+                  builder: (context, AsyncSnapshot<List<MyTimeline>> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      print('waiting');
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (snapshot.connectionState ==
+                        ConnectionState.done) {
+                      if (snapshot.hasData) {
+                        _myTimelineStore.timelineList = snapshot.data ?? [];
+                        if (_myTimelineStore.timelineList.isEmpty) {
+                          return const Center(child: Text('Nothing'));
+                        } else {
+                          return SingleChildScrollView(
+                            primary: true,
+                            child: ListView.separated(
+                              physics: const NeverScrollableScrollPhysics(),
+                              shrinkWrap: true,
+                              itemCount: _myTimelineStore.timelineList.length,
+                              separatorBuilder: (context, index) =>
+                                  const Divider(),
+                              itemBuilder: (context, index) {
+                                return _buildItemTimeLine(
+                                  index: index,
+                                  timelineList: _myTimelineStore.timelineList,
+                                );
+                              },
+                            ),
+                          );
+                        }
+                      } else if (snapshot.hasError) {
+                        print(snapshot.error);
+                        return const Center(child: Text('Error'));
+                      }
+                    }
+                    return Container();
+                  },
+                ),
+              )
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -184,7 +176,7 @@ class _MyTimeLineScreenState extends State<MyTimeLineScreen> {
               child: CustomTextField(
                 controller: _startDateController,
                 title: 'From',
-                isImportant: true,
+                isImportant: false,
                 hintText: 'Choose',
                 textInputType: TextInputType.datetime,
                 suffixIcon: Icon(Icons.calendar_today_outlined,
@@ -193,7 +185,6 @@ class _MyTimeLineScreenState extends State<MyTimeLineScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 10.0),
         Flexible(
           child: GestureDetector(
             onTap: () => _selectDate(context, _endDateController),
@@ -201,7 +192,7 @@ class _MyTimeLineScreenState extends State<MyTimeLineScreen> {
               child: CustomTextField(
                 controller: _endDateController,
                 title: 'To',
-                isImportant: true,
+                isImportant: false,
                 hintText: 'Choose',
                 textInputType: TextInputType.datetime,
                 suffixIcon: Icon(Icons.calendar_today_outlined,

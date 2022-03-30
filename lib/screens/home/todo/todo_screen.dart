@@ -11,6 +11,7 @@ import '../../../constants/constants.dart';
 
 class TodoScreen extends StatefulWidget {
   const TodoScreen({Key? key}) : super(key: key);
+  static const String route = '/home/todolist';
 
   @override
   State<StatefulWidget> createState() => _TodoScreenState();
@@ -54,15 +55,8 @@ class _TodoScreenState extends State<TodoScreen> {
               } else if (snapshot.connectionState == ConnectionState.done) {
                 if (snapshot.hasData) {
                   print('Count: ' + (snapshot.data?.length.toString() ?? '0'));
-                  return Container(
-                    color: primaryColor,
-                    child: Container(
-                      decoration: BoxDecoration(
-                          color: secondColor,
-                          borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(20.0))),
-                      child: _buildListView(),
-                    ),
+                  return createBody(
+                    child: _buildListView(),
                   );
                 } else if (snapshot.hasError) {
                   return const Text('Error');

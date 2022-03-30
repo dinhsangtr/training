@@ -22,7 +22,7 @@ class CustomDialog extends StatelessWidget {
           shrinkWrap: true,
           children: <Widget>[
             const Text(
-              'Thông báo',
+              'Notification',
               style: TextStyle(
                   fontSize: 18,
                   fontFamily: 'ibm_plex_sans',
@@ -41,45 +41,45 @@ class CustomDialog extends StatelessWidget {
             const SizedBox(height: 5),
             (hasButton ?? true)
                 ? Container(
-                    padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
-                    child: Flexible(
-                      flex: 1,
-                      fit: FlexFit.tight,
-                      child: InkWell(
-                        onTap: () {
-                          print('ink');
-                        },
-                        child: Container(
-                          height: 50,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.grey,
-                          ),
-                          child: MaterialButton(
-                            minWidth: size.width / 2.5,
-                            padding:
-                                const EdgeInsets.fromLTRB(5.0, 10.0, 5.0, 10.0),
-                            child: const Text(
-                              'Tiếp tục',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 18.0,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            onPressed: () async {
-                              try {
-                                Navigator.of(context).pop();
-                              } catch (e) {
-                                print(e);
-                              }
-                            },
-                          ),
+              padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
+              child: Flexible(
+                flex: 1,
+                fit: FlexFit.tight,
+                child: InkWell(
+                  onTap: () {
+                    print('ink');
+                  },
+                  child: Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.grey,
+                    ),
+                    child: MaterialButton(
+                      minWidth: size.width / 2.5,
+                      padding:
+                      const EdgeInsets.fromLTRB(5.0, 10.0, 5.0, 10.0),
+                      child: const Text(
+                        'Tiếp tục',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 18.0,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
+                      onPressed: () async {
+                        try {
+                          Navigator.of(context).pop();
+                        } catch (e) {
+                          print(e);
+                        }
+                      },
                     ),
-                  )
+                  ),
+                ),
+              ),
+            )
                 : Container(height: 0, width: 0),
           ],
         ),

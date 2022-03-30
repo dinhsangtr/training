@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:start/data/network/graphql_client.dart';
 import 'package:start/data/sharedprefs/constants/my_shared_prefs.dart';
 import 'package:start/screens/home/user/info_screen.dart';
 import 'package:start/screens/home/todo/todo_screen.dart';
-import 'package:start/data/sharedprefs/shared_preference_helper.dart';
+import 'package:start/store/user/user_store.dart';
 
 import 'home/main_screen.dart';
 import 'home/user/my_time_line_screen.dart';
@@ -18,26 +19,14 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  SharedPreferencesHelper prefs = SharedPreferencesHelper();
-  bool isRememberLogin = false;
-  String accessToken = '';
-
-  _getAccessToken() async {
-    String tokenType = await prefs.get(MySharedPrefs.token_type) ?? '';
-    String token = await prefs.get(MySharedPrefs.token) ?? '';
-    accessToken = tokenType + ' ' + token;
-    print(tokenType + ' ' + token);
-  }
-
-  _getStatusRemember() async {
-    isRememberLogin = await prefs.get(MySharedPrefs.isRemember) ?? false;
-    print('Remember Login: ' + isRememberLogin.toString());
-  }
+  final UserStore _userStore = UserStore();
 
   @override
   void initState() {
-    _getStatusRemember();
-    _getAccessToken();
+    MySharedPrefs.getAllSharedPrefs().then((value) {
+      print(value);
+    });
+    _userStore.getStatusRemember();
     super.initState();
   }
 
@@ -45,22 +34,27 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return GraphQLProvider(
       client: GraphQLConfig.client(),
-      child: MaterialApp(
+      child: Observer(
+        name: 'global-observer',
+        builder: (context) => MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Flutter Demo',
           theme: ThemeData(
             primarySwatch: Colors.blue,
+            scaffoldBackgroundColor: Colors.white,
           ),
           routes: <String, WidgetBuilder>{
-            '/login': (BuildContext context) => const LoginScreen(),
-            '/home': (BuildContext context) => const MainScreen(),
-            '/home/todolist': (BuildContext context) => const TodoScreen(),
-            '/home/myInfo': (BuildContext context) => const InfoScreen(),
-            '/home/myTimeline' : (BuildContext context) => const MyTimeLineScreen(),
+            LoginScreen.route: (BuildContext context) => const LoginScreen(),
+            MainScreen.route: (BuildContext context) => const MainScreen(),
+            TodoScreen.route: (BuildContext context) => const TodoScreen(),
+            InfoScreen.route: (BuildContext context) => const InfoScreen(),
+            MyTimeLineScreen.route: (BuildContext context) =>
+                const MyTimeLineScreen(),
           },
-          home: isRememberLogin == true
-              ? const MainScreen()
-              : const LoginScreen()),
+          home:
+              _userStore.isLoggedIn ? const MainScreen() : const LoginScreen(),
+        ),
+      ),
     );
   }
 }

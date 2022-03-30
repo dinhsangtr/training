@@ -1,29 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
-import 'package:start/data/network/graphql_client.dart';
-import 'package:start/data/sharedprefs/shared_preference_helper.dart';
 import 'package:start/model/user/uservfa.dart';
-import 'package:start/screens/home/user/widgets/CustomTextField.dart';
+import 'package:start/screens/home/user/widgets/custom_text_field.dart';
+import 'package:start/store/user/user_store.dart';
 import 'package:start/widgets/app.dart';
 
 import '../../../constants/constants.dart';
-import '../../../data/network/constants/constants.dart';
 
 class InfoScreen extends StatefulWidget {
   const InfoScreen({Key? key}) : super(key: key);
+  static const String route = '/home/myInfo';
 
   @override
   State<StatefulWidget> createState() => _InfoScreenState();
 }
 
 class _InfoScreenState extends State<InfoScreen> {
-  //shared prefs
-  SharedPreferencesHelper prefs = SharedPreferencesHelper();
-
   //Store
-  //final UserStore _userStore = UserStore();
-  late Future<UserVfa> userVfaFT;
-  late UserVfa userVfa;
+  final UserStore _userStore = UserStore();
 
   //controller textInput
   final TextEditingController _nameController = TextEditingController();
@@ -31,92 +24,66 @@ class _InfoScreenState extends State<InfoScreen> {
   final TextEditingController _birthdayController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
 
-  //
-  Future<UserVfa> getUser() async {
-    QueryResult queryResult = await GraphQLConfig.client().value.query(
-          QueryOptions(
-            document: gql(GraphQLConstants.userInformation),
-          ),
-        );
-    if (queryResult.data!['userInformation'].toString() == 'null') {
-      return UserVfa();
-    } else {
-      Map<String, dynamic> mapData =
-          queryResult.data!['userInformation']['response'];
-      print(mapData);
-      UserVfa userVfa = UserVfa.fromJson(mapData);
-      return userVfa;
-    }
-  }
-
   @override
   void initState() {
-    userVfaFT = getUser();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<UserVfa>(
-        future: userVfaFT,
-        builder: (context, AsyncSnapshot<UserVfa> snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            print('waiting');
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasData) {
-              userVfa = snapshot.data ?? UserVfa();
-              _nameController.text = userVfa.userFullName!;
-              _emailController.text = userVfa.vfaEmail!;
-              _phoneController.text = userVfa.vfaPhoneWork!;
-              return SafeArea(
-                child: Scaffold(
-                  appBar: createAppbar(
-                    context,
-                    title: 'My Info',
-                  ),
-                  body: Stack(
-                    children: [
-                      NotificationListener<OverscrollIndicatorNotification>(
-                        onNotification:
-                            (OverscrollIndicatorNotification overscroll) {
-                          overscroll.disallowGlow();
-                          return true;
-                        },
-                        child: MediaQuery.removePadding(
-                          context: context,
-                          removeTop: true,
-                          child: Container(
-                            color: primaryColor,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius:
-                                    borderRadius(20.0, 20.0, 0.0, 0.0),
-                              ),
-                              child: ListView(
-                                children: <Widget>[
-                                  const SizedBox(height: 12),
-                                  _buildAvatar(),
-                                  const SizedBox(height: 12),
-                                  _buildBody(),
-                                ],
-                              ),
-                            ),
+      future: _userStore.getUserVfa(),
+      builder: (context, AsyncSnapshot<UserVfa> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          print('waiting');
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.hasData) {
+            UserVfa userVfa = snapshot.data ?? UserVfa();
+            _nameController.text = userVfa.userFullName!;
+            _emailController.text = userVfa.vfaEmail!;
+            _phoneController.text = userVfa.vfaPhoneWork!;
+            return SafeArea(
+              child: Scaffold(
+                appBar: createAppbar(
+                  context,
+                  title: 'My Info',
+                ),
+                body: Stack(
+                  children: [
+                    NotificationListener<OverscrollIndicatorNotification>(
+                      onNotification:
+                          (OverscrollIndicatorNotification overscroll) {
+                        overscroll.disallowGlow();
+                        return true;
+                      },
+                      child: MediaQuery.removePadding(
+                        context: context,
+                        removeTop: true,
+                        child: createBody(
+                          child: ListView(
+                            children: <Widget>[
+                              const SizedBox(height: 12),
+                              _buildAvatar(),
+                              const SizedBox(height: 12),
+                              _buildBody(),
+                            ],
                           ),
                         ),
                       ),
-                      _buildButtonFloat(MediaQuery.of(context).size),
-                    ],
-                  ),
+                    ),
+                    _buildButtonFloat(MediaQuery.of(context).size),
+                  ],
                 ),
-              );
-            } else if (snapshot.hasError) {
-              return const Text('Error');
-            }
+              ),
+            );
+          } else if (snapshot.hasError) {
+            return const Text('Error');
           }
-          return Container();
-        });
+        }
+        return Container();
+      },
+    );
   }
 
   //
@@ -182,13 +149,13 @@ class _InfoScreenState extends State<InfoScreen> {
           textInputType: TextInputType.phone,
           suffixIcon: _phoneController.text.isNotEmpty
               ? IconButton(
-            onPressed: _phoneController.clear,
-            icon: const Icon(Icons.clear),
-          )
+                  onPressed: _phoneController.clear,
+                  icon: const Icon(Icons.clear),
+                )
               : const SizedBox(
-            height: 0.0,
-            width: 0.0,
-          ),
+                  height: 0.0,
+                  width: 0.0,
+                ),
         ),
       ],
     );

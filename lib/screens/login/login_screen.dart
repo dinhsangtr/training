@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:start/data/network/apis/login_api.dart';
 import 'package:start/data/sharedprefs/constants/my_shared_prefs.dart';
 import 'package:start/utils/toast.dart';
-import '../../data/network/constants/constants.dart';
+import 'package:start/widgets/app.dart';
 import '../../data/sharedprefs/shared_preference_helper.dart';
-import '../../data/network/graphql_client.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
+
+  static const String route = '/login';
 
   @override
   State<StatefulWidget> createState() => _LoginScreenState();
@@ -19,6 +20,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   //shared prefs
   SharedPreferencesHelper prefs = SharedPreferencesHelper();
+
+  final LoginApi _loginApi = LoginApi();
 
   @override
   void initState() {
@@ -34,53 +37,44 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _signIn(String vfaEmail, String password) async {
+  Future<void> _login(String vfaEmail, String password) async {
     print('I\'m in Login');
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+      Navigator.of(context).pop();
       Toast.showSnackBar(context, message: 'TextField Cannot Be Empty');
     } else {
-      await GraphQLConfig.client().value.mutate(
-            MutationOptions(
-              document: gql(GraphQLConstants.signIn),
-              variables: {
-                "input": {
-                  "vfaEmail": vfaEmail,
-                  "password": password,
-                }
-              },
-              onError: (OperationException? error) {
-                List<GraphQLError> graphqlErrors = error!.graphqlErrors;
-                print('Login Error: ' + graphqlErrors.first.message.toString());
-                Toast.showSnackBar(context,
-                    message: graphqlErrors.first.message.toString());
-              },
-              onCompleted: (dynamic data) {
-                print('Data: ' + (data.toString() != 'null' ? 'Oke' : 'Empty'));
+      Map<String, dynamic>? mapData =
+          await _loginApi.login(vfaEmail: vfaEmail, password: password);
 
-                if (data != null) {
-                  //Save data
-                  prefs.set(MySharedPrefs.token_type,
-                      data['login']['token_type'].toString());
-                  prefs.set(
-                      MySharedPrefs.token, data['login']['token'].toString());
-                  prefs.set(MySharedPrefs.expires_in,
-                      data['login']['expires_in'].toString());
-                  prefs.set(MySharedPrefs.userId,
-                      data['login']['user']['userId'].toString());
-                  prefs.set(MySharedPrefs.vfaEmail,
-                      data['login']['user']['vfaEmail'].toString());
-                  prefs.set(MySharedPrefs.vfaAvatar,
-                      data['login']['user']['vfaAvatar'].toString());
+      if (mapData!.isEmpty) {
+        print('MapData is empty');
+        Navigator.of(context).pop();
+        Toast.showSnackBar(context, message: 'Login Fail!');
+      } else {
+        if (mapData['message'].toString() != 'null') {
+          Navigator.of(context).pop();
+          Toast.showSnackBar(context, message: mapData['message'].toString());
+        } else if (mapData['login'].toString() != 'null') {
+          prefs.set(MySharedPrefs.token_type,
+              mapData['login']['token_type'].toString());
+          prefs.set(MySharedPrefs.token, mapData['login']['token'].toString());
+          prefs.set(MySharedPrefs.expires_in,
+              mapData['login']['expires_in'].toString());
+          prefs.set(MySharedPrefs.userId,
+              mapData['login']['user']['userId'].toString());
+          prefs.set(MySharedPrefs.vfaEmail,
+              mapData['login']['user']['vfaEmail'].toString());
+          prefs.set(MySharedPrefs.vfaAvatar,
+              mapData['login']['user']['vfaAvatar'].toString());
 
-                  //Remember Login
-                  prefs.set(MySharedPrefs.isRemember, true);
+          //Remember Login
+          prefs.set(MySharedPrefs.isRemember, true);
 
-                  Navigator.of(context).pushNamedAndRemoveUntil(
-                      '/home', (Route<dynamic> route) => false);
-                }
-              },
-            ),
-          );
+          Navigator.of(context).pop();
+          Navigator.of(context).pushNamedAndRemoveUntil(
+              '/home', (Route<dynamic> route) => false);
+        }
+      }
     }
   }
 
@@ -116,11 +110,10 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 5),
               _buildForgotPassword(onPressed: _forgotPassword),
               const SizedBox(height: 5),
-              _buildSignInButton(
-                context,
-                onPressed: () async => await _signIn(
-                    emailController.text, passwordController.text),
-              ),
+              _buildSignInButton(context, onPressed: () async {
+                showLoaderDialog(context);
+                await _login(emailController.text, passwordController.text);
+              }),
             ],
           ),
         ),
@@ -206,4 +199,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-

@@ -9,18 +9,18 @@ part of 'user_store.dart';
 // ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic
 
 mixin _$UserStore on _UserStore, Store {
-  final _$userVfaAtom = Atom(name: '_UserStore.userVfa');
+  final _$timelineListAtom = Atom(name: '_UserStore.timelineList');
 
   @override
-  UserVfa get userVfa {
-    _$userVfaAtom.reportRead();
-    return super.userVfa;
+  List<MyTimeline> get timelineList {
+    _$timelineListAtom.reportRead();
+    return super.timelineList;
   }
 
   @override
-  set userVfa(UserVfa value) {
-    _$userVfaAtom.reportWrite(value, super.userVfa, () {
-      super.userVfa = value;
+  set timelineList(List<MyTimeline> value) {
+    _$timelineListAtom.reportWrite(value, super.timelineList, () {
+      super.timelineList = value;
     });
   }
 
@@ -39,11 +39,42 @@ mixin _$UserStore on _UserStore, Store {
     });
   }
 
+  final _$userVfaAtom = Atom(name: '_UserStore.userVfa');
+
+  @override
+  UserVfa get userVfa {
+    _$userVfaAtom.reportRead();
+    return super.userVfa;
+  }
+
+  @override
+  set userVfa(UserVfa value) {
+    _$userVfaAtom.reportWrite(value, super.userVfa, () {
+      super.userVfa = value;
+    });
+  }
+
+  final _$getStatusRememberAsyncAction =
+      AsyncAction('_UserStore.getStatusRemember');
+
+  @override
+  Future getStatusRemember() {
+    return _$getStatusRememberAsyncAction.run(() => super.getStatusRemember());
+  }
+
+  final _$getUserVfaAsyncAction = AsyncAction('_UserStore.getUserVfa');
+
+  @override
+  Future<UserVfa> getUserVfa() {
+    return _$getUserVfaAsyncAction.run(() => super.getUserVfa());
+  }
+
   @override
   String toString() {
     return '''
-userVfa: ${userVfa},
-isLoggedIn: ${isLoggedIn}
+timelineList: ${timelineList},
+isLoggedIn: ${isLoggedIn},
+userVfa: ${userVfa}
     ''';
   }
 }
